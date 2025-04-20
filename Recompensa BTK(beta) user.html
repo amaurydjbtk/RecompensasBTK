@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recompensa BTK</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f1f1f1;
+      padding: 20px;
+    }
+    .frase {
+      font-weight: bold;
+      padding: 15px;
+      text-align: center;
+      color: #fff;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .dashboard, .admin-panel {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    }
+    .admin-panel {
+      display: none;
+    }
+    .button {
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    .button:hover {
+      background-color: #1b5e20;
+    }
+    .admin-text-button {
+      background: none;
+      border: none;
+      color: #2e7d32;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 10px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      margin-top: 5px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .progress-container {
+      background-color: #ddd;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 30px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #4caf50;
+      text-align: center;
+      line-height: 30px;
+      color: white;
+      transition: width 0.3s ease-in-out;
+    }
+    .reward-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 0 5px;
+      background-color: #e0e0e0;
+      position: relative;
+    }
+    .step.active {
+      background-color: #a5d6a7;
+      font-weight: bold;
+    }
+    .step::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -10px;
+      width: 20px;
+      height: 2px;
+      background-color: #bbb;
+    }
+    .step:last-child::after {
+      display: none;
+    }
+    .help-section {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e0f2f1;
+      border-left: 5px solid #009688;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="fraseMotivadora" class="frase"></div>
+
+<h1>Recompensa BTK (beta)</h1>
+
+<div class="dashboard">
+  <h2>Panel de Cliente</h2>
+  <label for="codigo">Código Diario:</label>
+  <input type="text" id="codigo" placeholder="Ingresa el código del día" />
+  <button class="button" onclick="registrarCodigo()">Registrar Código</button>
+  <p>BTK Acumulado: <span id="btkAcumulado">0</span></p>
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar">0%</div>
+  </div>
+
+  <div class="reward-steps">
+    <div class="step" id="step3">3 BTK<br><small>Cejas</small></div>
+    <div class="step" id="step5">5 BTK<br><small>Reservación</small></div>
+    <div class="step" id="step10">10 BTK<br><small>Corte Gratis</small></div>
+  </div>
+
+  <div id="recompensas"></div>
+    <button class="button" onclick="toggleAyuda()">¿Cómo funciona?</button>
+  <div class="help-section" id="ayuda">
+    <h3>¿Cómo funciona Recompensa BTK?</h3>
+    <p>* Cada vez que vengas a BARBATRONIK a cortarte el cabello, recibirás un <strong>código diario único</strong>.</p>
+    <p>* Ese código lo ingresas aquí mismo, en esta aplicación, para sumar 1 punto BTK.</p>
+    <p>* Al acumular 10 BTK, ¡ganas un corte de cabello totalmente <strong>gratis</strong>!</p>
+    <p>* También puedes elegir una recompensa anticipada: <strong>arreglo de cejas gratis a los 3 BTK</strong> o <strong>reservación gratis a los 5 BTK</strong>. Si eliges una, tu contador se reinicia.</p>
+    <p>* Luego de recibir tu recompensa, el contador se reinicia y puedes volver a participar.</p>
+    <p>* Solo se puede ingresar un código por día, y debe ser el del día correspondiente.</p>
+	<p>* Si <strong>desinstalas tu navegador, lo actualizas, o eliminas los datos de navegación, se perderán los BTK acumulados</strong>. si piensas hacer algo de lo mencionado anteriormente es recomendable hacer <strong>captura de pantalla</strong> antes para que quede constancia de los BTK obtenidos.</p>
+    <p>* Si tienes dudas, consulta con tu barbero, Telf 54034624. ¡Gracias por elegir BARBATRONIK!</p>
+  </div>
+</div>
+
+<div class="admin-panel">
+  <h2>Panel Administrador</h2>
+  <button class="button" onclick="verCodigoDiario()">Mostrar Código del Día</button>
+  <button class="button" onclick="verEstadisticas()">Ver Estadísticas</button>
+  <button class="button" onclick="logoutAdmin()">Cerrar sesión de Administrador</button>
+</div>
+
+<script>
+  const frases = [
+    "¡Sigue acumulando, cada BTK te acerca más al premio!",
+    "¡Hoy es un buen día para ganar BTK!",
+    "¡No te rindas, tu corte gratis está cerca!",
+    "¡Cada código cuenta, sigue así!",
+    "¡Recompensa BTK, premiando tu estilo diario!"
+  ];
+  const colores = ["#e53935", "#8e24aa", "#3949ab", "#00897b", "#fb8c00"];
+
+  function mostrarFrase() {
+    const randomIndex = Math.floor(Math.random() * frases.length);
+    const frase = frases[randomIndex];
+    const color = colores[randomIndex];
+    const fraseDiv = document.getElementById("fraseMotivadora");
+    fraseDiv.innerText = frase;
+    fraseDiv.style.backgroundColor = color;
+  }
+
+  mostrarFrase();
+
+  let btkAcumulado = parseInt(localStorage.getItem("btkAcumulado")) || 0;
+  document.getElementById("btkAcumulado").innerText = btkAcumulado;
+  actualizarBarra();
+  mostrarOpcionesRecompensa();
+  actualizarEtapas();
+
+  const fechaActual = new Date().toLocaleDateString();
+  const fechaUso = localStorage.getItem("fechaUso");
+  if (fechaUso !== fechaActual) {
+    localStorage.setItem("fechaUso", fechaActual);
+    localStorage.setItem("codigoUsadoHoy", "false");
+  }
+
+  function generarCodigoDiario() {
+    const claveSecreta = "BTK123";
+    const fecha = new Date().toLocaleDateString();
+    let hash = 0;
+    const input = claveSecreta + fecha;
+    for (let i = 0; i < input.length; i++) {
+      hash = (hash << 5) - hash + input.charCodeAt(i);
+      hash |= 0;
+    }
+    return "BTK-" + Math.abs(hash).toString().substring(0, 6);
+  }
+
+  function registrarCodigo() {
+    const inputCodigo = document.getElementById("codigo").value.trim();
+    const codigoEsperado = generarCodigoDiario();
+    const usado = localStorage.getItem("codigoUsadoHoy");
+
+    if (inputCodigo !== codigoEsperado) {
+      alert("Código incorrecto o vencido.");
+      return;
+    }
+
+    if (usado === "true") {
+      alert("Ya se registró el código del día.");
+      return;
+    }
+
+    btkAcumulado++;
+    if (btkAcumulado >= 10) {
+      alert("¡Felicidades! Has ganado un corte gratis.");
+      btkAcumulado = 0;
+    }
+
+    localStorage.setItem("codigoUsadoHoy", "true");
+    localStorage.setItem("btkAcumulado", btkAcumulado);
+    document.getElementById("btkAcumulado").innerText = btkAcumulado;
+    actualizarBarra();
+    mostrarOpcionesRecompensa();
+    actualizarEtapas();
+    alert("Código registrado exitosamente.");
+  }
+
+  function actualizarBarra() {
+    const progressBar = document.getElementById("progressBar");
+    const porcentaje = (btkAcumulado / 10) * 100;
+    progressBar.style.width = porcentaje + "%";
+    progressBar.innerText = Math.floor(porcentaje) + "%";
+  }
+
+  function mostrarOpcionesRecompensa() {
+    const recompensasDiv = document.getElementById("recompensas");
+    recompensasDiv.innerHTML = "";
+    if (btkAcumulado === 3) {
+      recompensasDiv.innerHTML = '<button class="button" onclick="reclamarRecompensa(3)">Reclamar arreglo de cejas gratis</button>';
+    } else if (btkAcumulado === 5) {
+      recompensasDiv.innerHTML = '<button class="button" onclick="reclamarRecompensa(5)">Reclamar reservación gratis</button>';
+    }
+  }
+
+  function actualizarEtapas() {
+    const steps = {
+      3: document.getElementById("step3"),
+      5: document.getElementById("step5"),
+      10: document.getElementById("step10")
+    };
+    for (let key in steps) {
+      steps[key].classList.remove("active");
+      if (btkAcumulado >= parseInt(key)) {
+        steps[key].classList.add("active");
+      }
+    }
+  }
+
+  function reclamarRecompensa(valor) {
+    if (valor === 3) {
+      alert("¡Has reclamado un arreglo de cejas gratis! Se ha reiniciado tu contador.");
+    } else if (valor === 5) {
+      alert("¡Has reclamado una reservación gratis! Se ha reiniciado tu contador.");
+    }
+    btkAcumulado = 0;
+    localStorage.setItem("btkAcumulado", btkAcumulado);
+    document.getElementById("btkAcumulado").innerText = btkAcumulado;
+    actualizarBarra();
+    mostrarOpcionesRecompensa();
+    actualizarEtapas();
+  }
+
+  function mostrarPanelAdmin() {
+    const adminPassword = prompt("Ingrese la contraseña de administrador:");
+    if (adminPassword === "admin123") {
+      document.querySelector(".dashboard").style.display = "none";
+      document.querySelector(".admin-panel").style.display = "block";
+    } else {
+      alert("Contraseña incorrecta.");
+    }
+  }
+
+  function verCodigoDiario() {
+    alert("Código válido de hoy: " + generarCodigoDiario());
+  }
+
+  function verEstadisticas() {
+    alert("BTK Acumulado: " + btkAcumulado);
+  }
+
+  function logoutAdmin() {
+    document.querySelector(".dashboard").style.display = "block";
+    document.querySelector(".admin-panel").style.display = "none";
+  }
+
+  function toggleAyuda() {
+    const ayuda = document.getElementById("ayuda");
+    ayuda.style.display = ayuda.style.display === "none" ? "block" : "none";
+  }
+</script>
+</body>
+</html>
